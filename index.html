@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        @font-face {
+            font-family: myFirstFont;
+            src: url("assets/fonts/BroadwayFlat.ttf");
+        }
+
+        body,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        .container {
+            font-family: myFirstFont, sans-serif;
+        }
+    </style>
+    <meta charset="utf-8">
+    <title>Concert Crashers</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <h1 style="color: turquoise; text-shadow: 2px 2px 4px rgba(0, 0, 0, 5.0); font-size: 85px;">Concert Crashers
+    </h1>
+    <p
+        style="text-align: center; font-size: 30px; font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; color: #dc143c;">
+        Welcome to our music discovery hub!</p>
+    <p
+        style="text-align: center; font-size: 20px; font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; color: #dc143c;">
+        Here, you can explore curated playlists by your favorite artists, and check out dates, countries, and venues.</p>
+    <p
+        style="text-align: center; font-size: 20px; font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; color: #dc143c;">
+        Dive into the world of live performances and musical exploration with us.</p>
+    <div class="container">
+        <div class="weather-input">
+            <h3 style="font-size: 150%;">Enter an Artist Name</h3>
+            <input class="city-input" type="text" id="artistName" placeholder="E.g., Taylor Swift, The Midnight, Drake">
+            <button class="search-btn">Search</button>
+        </div>
+        <div class="weather-data">
+            <div class="details" id="artistBioContainer">
+            </div>
+            <div id="embed-iframe"></div>
+            <div class="days-forecast">
+                <h2>Concert Info</h2>
+                <div id="concertInfoContainer">
+                    <div class="card">
+
+                        <div class="card-content">
+
+
+                            <div class="content">
+                                <h3>Artist</h3>
+                                <p>Date: </p>
+                                <p>Country: </p>
+                                <p>Venue: </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
+    <script>
+        var searchBtn = document.querySelector('.search-btn')
+        var searchInput = document.querySelector("#artistName")
+        // searchBtn.addEventListener("click", displaySpotify) 
+        searchBtn.addEventListener(
+            "click", async () => {
+                await displaySpotify()
+                await searchConcert()
+            }
+        )
+        async function searchArtistBio() {
+            var artistName = document.getElementById('artistName').value;
+
+            const url = 'https://wikipedia-api1.p.rapidapi.com/get_page?page_name=' + encodeURIComponent(artistName) + '&lang=en';
+            const options = {
+                method: 'GET',
+                headers: {
+                    'X-RapidAPI-Key': 'fa1e0954abmsh49440351d39b2c2p1c39e1jsn077aa4a47144',
+                    'X-RapidAPI-Host': 'spotify23.p.rapidapi.com'
+                }
+            };
+
+            try {
+                const response = await fetch(url, options);
+                const result = await response.json();
+                console.log(result)
+                displayArtistBio(result);
+                displaySpotify(result)
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        async function displaySpotify(result) {
+            var searchInput = document.querySelector("#artistName")
+            const url = 'https://spotify23.p.rapidapi.com/search/?q=' + searchInput.value + '&type=multi&offset=0&limit=10&numberOfTopResults=5';
+            const options = {
+                method: 'GET',
+                headers: {
+                    'X-RapidAPI-Key': 'fa1e0954abmsh49440351d39b2c2p1c39e1jsn077aa4a47144',
+                    'X-RapidAPI-Host': 'spotify23.p.rapidapi.com'
+                }
+            };
+            try {
+                const response = await fetch(url, options);
+                const result = await response.json();
+                console.log(result);
+                const uri = result.albums.items[0].data.uri
+                window.onSpotifyIframeApiReady = (IFrameAPI) => {
+                    const element = document.getElementById('embed-iframe');
+                    const options = {
+                        uri: uri
+                    };
+                    const callback = (EmbedController) => { };
+                    IFrameAPI.createController(element, options, callback);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+
+            // var artistName=result 
+
+
+        }
+        function displayArtistBio(bio) {
+            var artistBioContainer = document.getElementById('artistBioContainer');
+            artistBioContainer.innerHTML = bio;
+        }
+        async function searchConcert() {
+            var artistName = searchInput.value;
+            const url =
+                "https://concerts-artists-events-tracker.p.rapidapi.com/artist?name=" +
+                encodeURIComponent(artistName) +
+                "&page=1";
+
+            const options = {
+                method: "GET",
+                headers: {
+                    "X-RapidAPI-Key":
+                        "fa1e0954abmsh49440351d39b2c2p1c39e1jsn077aa4a47144",
+                    "X-RapidAPI-Host": "concerts-artists-events-tracker.p.rapidapi.com",
+                },
+            };
+
+            try {
+                console.log("Fetching concert information...");
+                const response = await fetch(url, options);
+                const result = await response.json();
+                console.log(result);
+                // Now you can process and display the concert information as needed
+                displayConcertInfo(result);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        function displayConcertInfo(concertInfo) {
+            // Implement logic to display concert information on your page
+            var concertInfoContainer = document.getElementById('concertInfoContainer');
+            concertInfoContainer.innerHTML = ""
+            for (var i = 0; i < 5; i++) {
+console.log(concertInfo.data[i].name)
+                concertInfoContainer.innerHTML += `<div class="card">
+    
+    <div class="card-content">
+    
+  
+      <div class="content">
+        <h3>${concertInfo.data[i].name}</h3>
+        <p>Date: ${concertInfo.data[i].endDate}</p>
+        <p>Country: ${concertInfo.data[i].location.address.addressCountry}</p>
+        <p>Venue: ${concertInfo.data[i].location.name}</p>
+      </div>
+    </div>
+  </div>`;
+            }
+        }
+
+        function displaySpotifyInfo(spotifyData) {
+            // Implement logic to display Spotify information on your page
+            var spotifyInfoContainer = document.getElementById('spotifyInfoContainer');
+            spotifyInfoContainer.innerHTML = `<p>Spotify Information: ${JSON.stringify(spotifyData)}</p>`;
+        }
+
+    </script>
+</body>
+
+</html>
